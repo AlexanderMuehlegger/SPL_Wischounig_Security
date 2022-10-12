@@ -1,4 +1,6 @@
 # tkinter provides GUI objects and commands
+from abc import ABC
+from operator import indexOf
 from telnetlib import TELNET_PORT
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -115,10 +117,85 @@ def ButtonModeHideClick():
         return
     
     bfOffsetBit = getImageValue(image, 4, 10)
-    print(bfOffsetBit)
+    print("OFFSET: "+str(bfOffsetBit))
 
     image_text = ""
 
+    biWidth = getImageValue(image, 4, 18)
+    print("WIDTH: "+str(biWidth))
+    
+    biHeight = getImageValue(image, 4, 22)
+    print("HEIGHT: "+str(biHeight))
+    
+    biBitCount = getImageValue(image, 2, 28)
+    print("Farbtiefe: " + str(biBitCount))
+    if(biBitCount != 24):
+        LabelModeFeedback["text"] = "Wrong Bitcount!"
+        return
+    
+    biCompression = getImageValue(image, 4, 30)
+    print("biCompression: "+ str(biCompression))
+    if(biCompression != 0):
+        LabelModeFeedback["text"] = "Compression is not allowed!"
+    
+    biClrUsed = getImageValue(image, 4, 46)
+    print("ClrUsed: "+ str(biClrUsed))
+    if(biClrUsed != 0):
+        LabelModeFeedback["text"] = "No Colourtable!"
+    
+    secretText = TextSecret.get('1.0', 'end')[:-1]
+    print(secretText)
+    secretBin = []
+    for i in secretText:
+        secretBin.append(ord(i))
+    #print(bin(secretBin[0]))
+    
+    secretPrint = []
+    for i in secretBin:
+        secretPrint.append(bin(i))
+    print (secretPrint)
+    
+
+    colorsBin = []
+    for i in range(54, len(image)):
+        colorsBin.append(image[i])
+    print(colorsBin)
+    colorsPrint = []
+    for i in colorsBin:
+        colorsPrint.append(bin(i))
+    print(colorsPrint)
+    
+    secretByte = secretBin[0]
+    secretBit = secretByte & 1
+    secretComparison = colorsBin[0] & ~1
+    secret = secretComparison | secretBit
+    print(secretBin)
+    
+    bitshift =1;
+    for i in range (0,8):
+        
+        secretBit = secretBin[0] & bitshift
+        print("SECRETBIT: "+str(secretBit))
+        secretComparison = colorsBin[i] & ~1
+        print("COMP:" + str(secretComparison))
+        secret = secretComparison | secretBit
+        colorsBin[i] = secret
+        print("SECRET: "+str(secret))
+        bitshift = bitshift<<1
+        print (bitshift)
+        
+        
+        
+            
+    print (colorsBin)
+            
+    
+    print(secretByte)
+    print(secretBit)
+    print("COMP: "+ str(secretComparison))
+    print("COMP: "+ str(secret))
+    
+    
     for x in range(len(image)):     #Format the integer Array
         if((x+1)%3 == 0):
             image_text += str(image[x]) + "\n"
